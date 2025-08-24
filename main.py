@@ -8,38 +8,62 @@ import mesh
 import utils
 
 if __name__ == "__main__":
-    viewer = viewer.Viewer(800, 600)
+    pygame.init()
+    pygame.font.init()
 
-    viewer.renderNodes = False
+    screenWidth, screenHeight = 1000, 800
+    font = pygame.font.SysFont("Arial", 30)
+    
+
+    window = pygame.display.set_mode((screenWidth, screenHeight), pygame.RESIZABLE)
+    viewer = viewer.Viewer(screenWidth, screenHeight)
+
 
     cube_mesh = utils.createCubeMesh("cube")
     viewer.addMesh(cube_mesh)
-    
-    Clock = pygame.time.Clock()
+   
+    camera = camera.Camera("camera", np.array([1, 1, 1], dtype=np.float32), np.array([500, 400]))
+    viewer.bindCamera(camera)
+
+    clock = pygame.time.Clock()
+
+
+
 
     while True:
-        
+        #window.fill((255, 255, 255))
 
-        viewer.display.fill(viewer.backgroundColor)
+        FL_surface = font.render(f"Focal Length: {camera.focalLength}", False, (255, 255, 255))
+        FPSText = font.render(f"FPS: {int(clock.get_fps())}", False, (255, 255, 255))
 
-        viewer.renderAll("z")
+        viewer.display_surface.fill(viewer.backgroundColor)
+
+    
+        viewer.renderScene(window, position=(0, 0))
+
+        window.blit(FL_surface, (25, 25))
+        window.blit(FPSText, (25, 65))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
 
+            if event.type == pygame.VIDEORESIZE:
+                viewer.updateDisplaySurface(window.get_width(), window.get_height())
+
+
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_RIGHT]:
-            cube_mesh.translate((1, 0, 0))
+            camera.moveSideways(-0.5)
 
         if keys[pygame.K_LEFT]:
-            cube_mesh.translate((-1, 0, 0))
+            camera.moveSideways(0.5)
         if keys[pygame.K_DOWN]:
-            cube_mesh.translate((0, 1, 0))
+            camera.moveForward(0.5)
 
         if keys[pygame.K_UP]:
-            cube_mesh.translate((0, -1, 0))
+            camera.moveForward(-0.5)
         
         if keys[pygame.K_PLUS]:
             cube_mesh.scale((1.1, 1.1, 1.1))
@@ -60,9 +84,25 @@ if __name__ == "__main__":
             cube_mesh.rotate("Y", 0.01)
 
         if keys[pygame.K_z]:
-            cube_mesh.rotate("Z", -0.01)
-
+            camera.moveVertical(-0.5)
         if keys[pygame.K_x]:
-            cube_mesh.rotate("Z", 0.01)
+            camera.moveVertical(0.5)
+
+        if keys[pygame.K_0]:
+            camera.focalLength += 1
+            if camera.focalLength > 200:
+                camera.focalLength -= 1
+            camera.updateIntrinsicMatrix()
+            
+        if keys[pygame.K_9]:
+            
+            camera.focalLength -= 1
+            if camera.focalLength < 10:
+                camera.focalLength += 1
+            
+            camera.updateIntrinsicMatrix()
+
+            focalLengthToggler = not focalLengthToggler
 
         pygame.display.update()
+        clock.tick(60)
