@@ -1,6 +1,14 @@
 import numpy as np
 import mesh
 
+def collideCircle(radius, circlePos, coords):
+    dist = np.sqrt((coords[0]-circlePos[0])**2 + (coords[1]-circlePos[1])**2)
+
+    if dist < radius:
+        return True
+    
+    return False
+
 def unitVector(vector):
     module = np.linalg.norm(vector)
     
